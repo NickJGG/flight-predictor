@@ -1,0 +1,28 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Flight Calculator</title>
+	<link rel = "stylesheet" type = "text/css" href = "{% static 'css/index.css' %}">
+</head>
+<body>
+	<div id = "form-container">
+		<div id = "form-title">
+			<img src = "{% static 'img/icon.png' %}">
+			<p>Flight Calculator</p>
+		</div>
+		<div id = "form-info">
+			<div class = "form-input">
+				<p>Departure IATA Code</p>
+				<input placeholder = "ATL" type = "text" maxlength = 3>
+			</div>
+			<div class = "form-input">
+				<p>Arrival IATA Code</p>
+				<input placeholder = "LAX" type = "text" maxlength = 3>
+			</div>
+			<button>Calculate</button>
+		</div>
+	</div>
+</body>
+</html>
