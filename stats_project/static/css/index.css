@@ -81,3 +81,19 @@ body{
 .form-input:not(:first-child){
 	margin-top: 5px;
 }
+#loading-box{
+	width: 100%;
+	margin-top: 20px;
+	display: none;
+	align-items: center;
+	justify-content: center;
+}
+#loading-box img{
+	width: 25px;
+	height: 25px;
+}
+#loading-box p{
+	margin-left: 10px;
+	font-size: 12px;
+	color: #444;
+}

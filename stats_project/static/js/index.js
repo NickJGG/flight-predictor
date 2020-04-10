@@ -30,6 +30,8 @@ $(document).ready(function(){
 	$('#submit').on('click', function(e){
 		var departure = $('#departure').val(),
 			arrival = $('#arrival').val();
+			
+		$('#loading-box').css('display', 'flex');
 		
 		$.ajax({
 			 'type': "GET",
@@ -38,8 +40,13 @@ $(document).ready(function(){
 				'departure': departure,
 				'arrival': arrival
 			 },
+			 'error': function(e){
+				 $('#loading-box').css('display', 'none');
+			 },
 			 'dataType': 'json',
-			 'success': function (data){		
+			 'success': function (data){
+				$('#loading-box').css('display', 'none');
+				 
 				console.log("SUCCESS");
 				console.log(data);
 			}
