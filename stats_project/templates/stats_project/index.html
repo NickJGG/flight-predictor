@@ -15,11 +15,11 @@
 		<form id = "form-info" method = "get" action = "#">
 			{% csrf_token %}
 			<div class = "form-input">
-				<p>Departure IATA Code</p>
+				<p>Departure City</p>
 				<input id = "departure" name = "departure" placeholder = "ATL" type = "text">
 			</div>
 			<div class = "form-input">
-				<p>Arrival IATA Code</p>
+				<p>Arrival City</p>
 				<input id = "arrival" name = "arrival" placeholder = "LAX" type = "text">
 			</div>
 			<button id = "submit" name = "submit" type = "submit">Calculate</button>

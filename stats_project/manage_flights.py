@@ -153,22 +153,6 @@ def get_final_data(depart, arrival):
 
     return raw_data
 
-def main():
-    city1 = 'Los Angeles'
-    city2 = 'Miami'
-
-    cities1 = get_all_codes(get_airports_near(city1, 200))[:7]
-    cities2 = get_all_codes(get_airports_near(city2, 200))[:7]
-
-    print(city1 + ": " + str(cities1))
-    print(city2 + ": " + str(cities2))
-
-    for depart in cities1:
-        for arrival in cities2:
-            get_flight_data(depart, arrival)
-
-#all_codes = get_all_codes(get_airports_near('Atlanta', 200))
-
 '''for data in raw_data:
     print(data[0] + " to " + data[1] + "\n========================================")
 
