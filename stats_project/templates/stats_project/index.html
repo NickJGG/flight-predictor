@@ -16,17 +16,20 @@
 			{% csrf_token %}
 			<div class = "form-input">
 				<p>Departure City</p>
-				<input id = "departure" name = "departure" placeholder = "ATL" type = "text">
+				<input id = "departure" name = "departure" placeholder = "Detroit" type = "text">
 			</div>
 			<div class = "form-input">
 				<p>Arrival City</p>
-				<input id = "arrival" name = "arrival" placeholder = "LAX" type = "text">
+				<input id = "arrival" name = "arrival" placeholder = "Los Angeles" type = "text">
 			</div>
 			<button id = "submit" name = "submit" type = "submit">Calculate</button>
 		</form>
 		<div id = "loading-box">
 			<img src = "{% static 'img/loading.gif' %}">
 			<p>This may take up to a minute.</p>
+		</div>
+		<div id = "results-box">
+			<p id = "predicted-price"></p>
 		</div>
 	</div>
 	

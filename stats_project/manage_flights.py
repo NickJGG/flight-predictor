@@ -1,12 +1,16 @@
+import math
+
 from bs4 import BeautifulSoup as BSoup
 from tabula import convert_into
 
 import csv
 import requests
+from datetime import datetime, date
 
 session = requests.session()
 
 raw_data = []
+overall_mean_variances = [0.106802865, 0.191468296, 0.065944493, 0.142714838, 0.203228599, 0.06416601, -0.114002747, 0.071088255, 0.198161485, 0.480192837, 0.198254541, -0.236386928]
 
 months = {
         'Jan': 1,
@@ -29,6 +33,9 @@ class Airport():
     city = ''
     state = ''
 
+def sort_distance(e):
+    return e['distance']
+
 def get_airports_near(city, distance):
     url = "https://www.distance24.org/route.json?stops=" + city
     r = session.get(url)
@@ -39,7 +46,10 @@ def get_airports_near(city, distance):
 
     cities = []
 
-    for city in json['stops'][0]['nearByCities']:
+    nearby_cities = json['stops'][0]['nearByCities']
+    nearby_cities.sort(key = sort_distance)
+
+    for city in nearby_cities:
         if city['distance'] < distance:
             cities.append(city['city'])
 
@@ -109,7 +119,9 @@ def get_flight_data(depart, arrival):
 
                 temp_data[3][key] = difference  # Calculates change in price
 
-        raw_data.append(temp_data)  # Add to total data
+        return temp_data
+
+    return False
 
 codes_url = "https://www.nationsonline.org/oneworld/IATA_Codes/airport_code_list.htm"
 codes_r = session.get(codes_url)
@@ -140,18 +152,120 @@ def get_codes(city):
 
     return codes
 
+def get_means(data):
+    mean_prices = {}
+    mean_variances = {}
+    prices_counts = {}
+    variances_counts = {}
+
+    for route in data:
+        for i, price in route[-2].items():
+            if i in mean_prices:
+                mean_prices[i] += price
+                prices_counts[i] += 1
+            else:
+                mean_prices[i] = price
+                prices_counts[i] = 1
+
+        for i, variance in route[-1].items():
+            if i in mean_variances:
+                mean_variances[i] += variance
+                variances_counts[i] += 1
+            else:
+                mean_variances[i] = variance
+                variances_counts[i] = 1
+
+    for i, mean in mean_variances.items():
+        mean /= variances_counts[i]
+
+    for i, price in mean_prices.items():
+        price /= prices_counts[i]
+
+    for x in range(len(overall_mean_variances)):
+        if x + 1 not in mean_variances:
+            mean_variances[x + 1] = overall_mean_variances[x]
+
+    return (mean_prices, mean_variances)
+
 def get_final_data(depart, arrival):
     cities1 = get_all_codes(get_airports_near(depart, 200))[:7]
     cities2 = get_all_codes(get_airports_near(arrival, 200))[:7]
 
-    print(depart + ": " + str(cities1))
-    print(arrival + ": " + str(cities2))
+    print("\n" + depart + ": " + str(cities1))
+    print(arrival + ": " + str(cities2) + "\n")
+
+    flight_data = []
+    return_data = {}
 
     for city1 in cities1:
         for city2 in cities2:
-            get_flight_data(city1, city2)
+            if city1 != city2:
+                result = get_flight_data(city1, city2)
 
-    return raw_data
+                if result:
+                    flight_data.append(result)
+
+    mean_prices, mean_variances = get_means(flight_data)
+
+    today = datetime.today()
+    month_index = datetime.today().month # An index of 3 means from March to April
+
+    if today.day < 15:
+        month_index = month_index - 1 if month_index > 1 else 12
+
+    predicted_variance = mean_variances[month_index]
+    predicted_price = 0.0
+
+    print("PREDICTED VARIANCE: " + str(predicted_variance))
+
+    depart_code = get_codes(depart)[0]
+    arrival_code = get_codes(arrival)[0]
+
+    route_data = get_flight_data(depart_code, arrival_code)
+
+    if not route_data:
+        print("ERROR 1")
+
+        route_data = get_flight_data(depart, arrival)
+
+    if route_data:
+        month_from = list(months.keys())[month_index - 1]
+        month_to =  list(months.keys())[month_index]
+
+        price_from = 0
+        price_to = 0
+
+        if (month_index in route_data[2]):
+            price_from = route_data[2][month_index]
+        else:
+            print("===/// USING MEAN PRICE from ///===")
+            price_from = mean_prices[month_index]
+
+        if (month_index + 1 in route_data[2]):
+            price_to = route_data[2][month_index + 1]
+        else:
+            print("===/// USING MEAN PRICE to ///===")
+            price_to = mean_prices[month_index + 1]
+
+        print(month_from + ": " + str(price_from))
+        print(month_to + ": " + str(price_to))
+
+        days_since_last = (today.date() - date(2020, month_index, 15)).days
+
+        print("days since: " + str(days_since_last))
+
+        predicted_price = price_from * (1 + (days_since_last * predicted_variance) / 30)
+
+        print("PREDICTED PRICE: " + str(predicted_price))
+    else:
+        print("ERROR 2")
+        print(route_data)
+
+    print("")
+
+    return_data['predicted_price'] = round(predicted_price, 2)
+
+    return return_data
 
 '''for data in raw_data:
     print(data[0] + " to " + data[1] + "\n========================================")

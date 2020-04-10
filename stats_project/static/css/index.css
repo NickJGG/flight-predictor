@@ -97,3 +97,14 @@ body{
 	font-size: 12px;
 	color: #444;
 }
+#results-box{
+	width: 100%;
+	margin-top: 20px;
+	display: none;
+	align-items: center;
+	justify-content: center;
+}
+#predicted-price{
+	color: green;
+	font-weight: 500;
+}

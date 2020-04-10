@@ -32,6 +32,7 @@ $(document).ready(function(){
 			arrival = $('#arrival').val();
 			
 		$('#loading-box').css('display', 'flex');
+		$('#results-box').css('display', 'none');
 		
 		$.ajax({
 			 'type': "GET",
@@ -45,7 +46,10 @@ $(document).ready(function(){
 			 },
 			 'dataType': 'json',
 			 'success': function (data){
+				 $('#predicted-price').text("$" + data['predicted_price']['predicted_price']);
+				 
 				$('#loading-box').css('display', 'none');
+				$('#results-box').css('display', 'flex');
 				 
 				console.log("SUCCESS");
 				console.log(data);

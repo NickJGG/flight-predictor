@@ -9,8 +9,8 @@ def index(request):
 def flight_data(request, departure, arrival):
     data = manage_flights.get_final_data(departure, arrival)
 
-    print(data)
+    #print(data)
 
-    return JsonResponse({'data': data})
+    return JsonResponse({'predicted_price': data})
 
 # Functions
