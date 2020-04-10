@@ -46,11 +46,11 @@ def get_airports_near(city, distance):
 
     cities = []
 
-    nearby_cities = json['stops'][0]['nearByCities']
-    nearby_cities.sort(key = sort_distance)
+    nearby_cities = json['stops'][0]['nearByCities'] # Gets names of nearby cities
+    nearby_cities.sort(key = sort_distance) # Sorts by distance from given city
 
     for city in nearby_cities:
-        if city['distance'] < distance:
+        if city['distance'] < distance: # Only adds cities below the threshold
             cities.append(city['city'])
 
     return cities
@@ -64,21 +64,20 @@ def get_flight_data(depart, arrival):
 
     chart_data = r.json()['chart_data']
 
-    # Initializing data entry
-    temp_data = [depart, arrival, {}, {}]
+    temp_data = [depart, arrival, {}, {}] # Initializing data entry
 
     price = 0
     month_count = 0
     temp_month_count = 0
     month = ""
 
-    for i in range(len(chart_data)):
-        item = chart_data[i]
+    for i in range(len(chart_data)): # For every month data
+        item = chart_data[i] # All relevant info
 
         info = item['year'].split("\n")
         info.append(item['price'])
 
-        if not month:  # First chart data
+        if not month:  # First month data
             month = info[0]
             year = int(info[1])
         elif info[0] != month:  # When you get to the next month (some months have multiple data points)
@@ -90,23 +89,17 @@ def get_flight_data(depart, arrival):
             month_count += 1
             month = info[0]
 
-            #print(temp_data[-1])
-
         temp_month_count += 1
         price += float(info[2])
 
-        if i == len(chart_data) - 1:
+        if i == len(chart_data) - 1: # Last month
             temp_data[2][months[month]] = price / temp_month_count # Sets months price to the average of each data point
             month_count += 1
 
-            #print(temp_data[-1])
-
-    #print(temp_data)
-
-    if month_count > 0:
+    if month_count > 0: # If any data at all
         prices = temp_data[2]
 
-        for key, price in prices.items():
+        for key, price in prices.items(): # For every month's price
             key2 = key + 1 if key < 12 else 1  # Ensures that Dec to Jan gets calculated (wraps around to 1 if at the end of the list)
 
             if key2 in prices:  # If two consecutive months have data points
@@ -135,12 +128,14 @@ def get_all_codes(cities):
 
     return total_codes
 
+# Parses a website for a list of IATA codes
 def get_codes(city):
     divs = codes_soup.findAll('a', text = city)
     divs2 = codes_soup.findAll('td', attrs = {'class': 'border1'})
 
     codes = []
 
+    # Removes duplicates
     for div in divs:
         codes.append(div.parent.parent.findAll('td')[2::3][0].text)
     for div in divs2:
@@ -152,6 +147,7 @@ def get_codes(city):
 
     return codes
 
+# Averages the prices and variances
 def get_means(data):
     mean_prices = {}
     mean_variances = {}
@@ -183,12 +179,12 @@ def get_means(data):
 
     for x in range(len(overall_mean_variances)):
         if x + 1 not in mean_variances:
-            mean_variances[x + 1] = overall_mean_variances[x]
+            mean_variances[x + 1] = overall_mean_variances[x] # Substitutes the overall variance if not is found
 
-    return (mean_prices, mean_variances)
+    return mean_prices, mean_variances
 
 def get_final_data(depart, arrival):
-    cities1 = get_all_codes(get_airports_near(depart, 200))[:7]
+    cities1 = get_all_codes(get_airports_near(depart, 200))[:7] # Gets codes of nearby cities
     cities2 = get_all_codes(get_airports_near(arrival, 200))[:7]
 
     print("\n" + depart + ": " + str(cities1))
@@ -200,7 +196,7 @@ def get_final_data(depart, arrival):
     for city1 in cities1:
         for city2 in cities2:
             if city1 != city2:
-                result = get_flight_data(city1, city2)
+                result = get_flight_data(city1, city2) # Gathers all flight data for nearby cities
 
                 if result:
                     flight_data.append(result)
@@ -210,7 +206,7 @@ def get_final_data(depart, arrival):
     today = datetime.today()
     month_index = datetime.today().month # An index of 3 means from March to April
 
-    if today.day < 15:
+    if today.day < 15: # Instead of a single trendline, this uses a linear trend from month to month (15th to 15th)
         month_index = month_index - 1 if month_index > 1 else 12
 
     predicted_variance = mean_variances[month_index]
@@ -221,9 +217,9 @@ def get_final_data(depart, arrival):
     depart_code = get_codes(depart)[0]
     arrival_code = get_codes(arrival)[0]
 
-    route_data = get_flight_data(depart_code, arrival_code)
+    route_data = get_flight_data(depart_code, arrival_code) # Gets the user's requested flight data
 
-    if not route_data:
+    if not route_data: # If nothing is found by using the codes, use the cities names instead
         print("ERROR 1")
 
         route_data = get_flight_data(depart, arrival)
@@ -237,24 +233,24 @@ def get_final_data(depart, arrival):
 
         if (month_index in route_data[2]):
             price_from = route_data[2][month_index]
-        else:
+        else: # Uses average price from nearby cities if nothing is found
             print("===/// USING MEAN PRICE from ///===")
             price_from = mean_prices[month_index]
 
         if (month_index + 1 in route_data[2]):
             price_to = route_data[2][month_index + 1]
-        else:
+        else: # Uses average price from nearby cities if nothing is found
             print("===/// USING MEAN PRICE to ///===")
             price_to = mean_prices[month_index + 1]
 
         print(month_from + ": " + str(price_from))
         print(month_to + ": " + str(price_to))
 
-        days_since_last = (today.date() - date(2020, month_index, 15)).days
+        days_since_last = (today.date() - date(2020, month_index, 15)).daysd # How far along the month
 
         print("days since: " + str(days_since_last))
 
-        predicted_price = price_from * (1 + (days_since_last * predicted_variance) / 30)
+        predicted_price = price_from * (1 + (days_since_last * predicted_variance) / 30) # Calculates the predicted price
 
         print("PREDICTED PRICE: " + str(predicted_price))
     else:
