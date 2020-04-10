@@ -10,7 +10,9 @@ from datetime import datetime, date
 session = requests.session()
 
 raw_data = []
-overall_mean_variances = [0.106802865, 0.191468296, 0.065944493, 0.142714838, 0.203228599, 0.06416601, -0.114002747, 0.071088255, 0.198161485, 0.480192837, 0.198254541, -0.236386928]
+#overall_mean_variances = [0.106802865, 0.191468296, 0.065944493, 0.142714838, 0.203228599, 0.06416601, -0.114002747, 0.071088255, 0.198161485, 0.480192837, 0.198254541, -0.236386928]
+overall_mean_variances = [0.046935368, 0.349271934, 0.015730188, 0.104964831, 0.219331373, 0.066125376, -0.13580952, 0.040763284, 0.247060446, 0.298777508, 0.165885977, -0.293639191]
+
 
 months = {
         'Jan': 1,
@@ -246,7 +248,7 @@ def get_final_data(depart, arrival):
         print(month_from + ": " + str(price_from))
         print(month_to + ": " + str(price_to))
 
-        days_since_last = (today.date() - date(2020, month_index, 15)).daysd # How far along the month
+        days_since_last = (today.date() - date(2020, month_index, 15)).days # How far along the month
 
         print("days since: " + str(days_since_last))
 
