@@ -7,7 +7,7 @@ def index(request):
     return render(request, 'stats_project/index.html')
 
 def flight_data(request, departure, arrival):
-    data = manage_flights.get_final_data(departure, arrival)
+    data = manage_flights.get_final_data(departure, arrival, 7)
 
     #print(data)
 

@@ -33,29 +33,36 @@ $(document).ready(function(){
 			
 		$('#loading-box').css('display', 'flex');
 		$('#results-box').css('display', 'none');
+		$('#error-box').css('display', 'none');
 		
 		$.ajax({
-			 'type': "GET",
-			 'url': location.protocol + "//" + location.host + "/flightdata/" + departure + "+" + arrival + "/",
-			 'data': {
+			'type': "GET",
+			'url': location.protocol + "//" + location.host + "/flightdata/" + departure + "+" + arrival + "/",
+			'data': {
 				'departure': departure,
 				'arrival': arrival
-			 },
-			 'error': function(e){
-				 $('#loading-box').css('display', 'none');
-			 },
-			 'dataType': 'json',
-			 'success': function (data){
-				 console.log(data);
-				 
-				 $('#predicted-price').text("$" + data['predicted_price']);
-				 $('#lower-bound').text("$" + data['lower_bound']);
-				 $('#upper-bound').text("$" + data['upper_bound']);
-				 
+			},
+			'error': function(e){
 				$('#loading-box').css('display', 'none');
-				$('#results-box').css('display', 'flex');
+			},
+			'dataType': 'json',
+			'success': function (data){
+				$('#loading-box').css('display', 'none');
+				
+				console.log(data);
+				console.log(data['success']);
 				 
-				console.log("SUCCESS");
+				if (data['success']){
+					$('#results-box').css('display', 'flex');
+					
+					$('#predicted-price').text("$" + data['confidence_interval']['predicted_price']);
+					$('#lower-bound').text("$" + data['confidence_interval']['lower_bound']);
+					$('#upper-bound').text("$" + data['confidence_interval']['upper_bound']);
+				} else {
+					$('#error-box').css('display', 'flex');
+					
+					$('#error-message').text(data['error_message']);
+				}
 			}
 		});
 		

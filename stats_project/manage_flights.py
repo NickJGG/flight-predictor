@@ -7,6 +7,12 @@ import csv
 import requests
 from datetime import datetime, date
 
+# ERROR CODES
+#
+# E01-1 - no mean price data for surrounding cities (from)
+# E01-2 - no mean price data for surrounding cities (to)
+# E02 - could not find specified cities
+
 session = requests.session()
 
 raw_data = []
@@ -214,110 +220,129 @@ def get_stats(data):
 
     return mean_prices, mean_variances, stdev_variances
 
-def get_final_data(depart, arrival):
-    cities1 = get_all_codes(get_airports_near(depart, 200))[:7] # Gets codes of nearby cities
-    cities2 = get_all_codes(get_airports_near(arrival, 200))[:7]
-
-    print("\n" + depart + ": " + str(cities1))
-    print(arrival + ": " + str(cities2) + "\n")
-
-    flight_data = []
+def get_final_data(depart, arrival, sample_size_cap):
     return_data = {}
-
-    for city1 in cities1:
-        for city2 in cities2:
-            if city1 != city2:
-                result = get_flight_data(city1, city2) # Gathers all flight data for nearby cities
-
-                if result:
-                    flight_data.append(result)
-
-    mean_prices, mean_variances, stdev_variances = get_stats(flight_data)
-
-    print("STDEVS: " + str(stdev_variances))
-
-    today = datetime.today()
-    month_index = datetime.today().month # An index of 3 means from March to April
-
-    if today.day < 15: # Instead of a single trendline, this uses a linear trend from month to month (15th to 15th)
-        month_index = month_index - 1 if month_index > 1 else 12
-
-    predicted_variance = mean_variances[month_index]
-    predicted_price = 0.0
-
-    print("PREDICTED VARIANCE: " + str(predicted_variance))
 
     depart_codes = get_codes(depart)
     arrival_codes = get_codes(arrival)
 
-    print(arrival_codes)
+    output = []
 
-    if depart_codes != [] and arrival_codes != []:
+    if depart_codes != [] and arrival_codes != []: # If function found correct IATA codes from city names
         depart_code = get_codes(depart)[0]
         arrival_code = get_codes(arrival)[0]
 
         route_data = get_flight_data(depart_code, arrival_code) # Gets the user's requested flight data
 
         if not route_data: # If nothing is found by using the codes, use the cities names instead
-            print("ERROR 1")
-
             route_data = get_flight_data(depart, arrival)
     else:
-        route_data = get_flight_data(depart, arrival)
+        route_data = get_flight_data(depart, arrival) # Try to get flight data by city name instead of IATA codes
 
-    if route_data:
-        month_from = list(months.keys())[month_index - 1]
-        month_to =  list(months.keys())[month_index]
-
+    if route_data: # Finally, if some flight data was found
         price_from = 0
         price_to = 0
 
-        if (month_index in route_data[2]):
+        predicted_price = 0
+        lower_bound = 0
+        upper_bound = 0
+
+        surrounding_flights_data = []
+
+        # Gets codes of nearby cities
+        cities1 = get_all_codes(get_airports_near(depart, 200))[:sample_size_cap]
+        cities2 = get_all_codes(get_airports_near(arrival, 200))[:sample_size_cap]
+
+        # Gathers all flight data for nearby cities
+        for city1 in cities1:
+            for city2 in cities2:
+                if city1 != city2:
+                    result = get_flight_data(city1, city2)
+
+                    if result:
+                        surrounding_flights_data.append(result)
+
+        # Gets the mean price and variances of the flights of surrounding cities, and also the standard deviations of each months' variance
+        mean_prices, mean_variances, stdev_variances = get_stats(surrounding_flights_data)
+
+        today = date.today()
+        month_index = date.today().month # An index of 3 means from March to April
+
+        # Instead of a single trendline, this uses a linear trend from month to month (15th to 15th)
+        if today.day < 15:
+            month_index = month_index - 1 if month_index > 1 else 12
+
+        predicted_variance = mean_variances[month_index]
+
+        # Based on the progress through the cycle (middle of each month), it picks the months
+        month_from = list(months.keys())[month_index - 1]
+        month_to = list(months.keys())[month_index]
+
+        if month_index in route_data[2]:
             price_from = route_data[2][month_index]
-        else: # Uses average price from nearby cities if nothing is found
-            print("===/// USING MEAN PRICE from ///===")
+        elif month_index in mean_prices: # Uses average price from nearby cities if nothing is found
             price_from = mean_prices[month_index]
+        else:
+            return_data['success'] = False
+            return_data['error_message'] = 'Not enough data available (E01-1)'
 
-        if (month_index + 1 in route_data[2]):
+            return return_data
+
+        if month_index + 1 in route_data[2]:
             price_to = route_data[2][month_index + 1]
-        else: # Uses average price from nearby cities if nothing is found
-            print("===/// USING MEAN PRICE to ///===")
+        elif month_index + 1 in mean_prices: # Uses average price from nearby cities if nothing is found
             price_to = mean_prices[month_index + 1]
+        else:
+            return_data['success'] = False
+            return_data['error_message'] = 'Not enough data available (E01-2)'
 
-        print(month_from + ": " + str(price_from))
-        print(month_to + ": " + str(price_to))
+            return return_data
 
-        days_since_last = (today.date() - date(2020, month_index, 15)).days # How far along the month
+        # Calculates progress into the cycle
+        days_into_cycle = (today - date(2020, month_index, 15)).days
 
-        print("days since: " + str(days_since_last))
+        # Gets the standard deviation from the correct month
+        stdev = stdev_variances[month_index]
 
-        predicted_price = price_from * (1 + (days_since_last * predicted_variance) / 30) # Calculates the predicted price
-        lower_bound = price_from * (1 + (days_since_last * (predicted_variance - stdev_variances[month_index])) / 30)
-        upper_bound = price_from * (1 + (days_since_last * (predicted_variance + stdev_variances[month_index])) / 30)
+        # Generates a confidence interval for the predicted price
+        predicted_price = round(price_from * (1 + (days_into_cycle * predicted_variance) / 30), 2)
+        bound1 = round(price_from * (1 + (days_into_cycle * (predicted_variance - stdev)) / 30), 2)
+        bound2 = upper_bound = round(price_from * (1 + (days_into_cycle * (predicted_variance + stdev)) / 30), 2)
 
-        print("PREDICTED PRICE: " + str(predicted_price))
+        if bound1 > bound2:
+            lower_bound = bound2
+            upper_bound = bound1
+        else:
+            lower_bound = bound1
+            upper_bound = bound2
+
+        # Outputs to console
+        output.append(depart + ": " + str(cities1))
+        output.append(arrival + ': ' + str(cities2) + '\n')
+
+        output.append("Route variances: " + str(stdev_variances) + '\n')
+
+        output.append(month_from + ": $" + str(price_from))
+        output.append(month_to + ": $" + str(price_to))
+        output.append('Days: ' + str(days_into_cycle) + '/30 \n')
+
+        output.append("Predicted values: ")
+        output.append('\tVariance: ' + str(predicted_variance))
+        output.append('\tStandard Deviation: ' + str(stdev))
+        output.append('\tPrice: $' + str(predicted_price))
+
+        # Formats return data
+        return_data['success'] = True
+        return_data['months'] = (month_from, month_to)
+        return_data['confidence_interval'] = {
+            'lower_bound': '{:20,.2f}'.format(lower_bound),
+            'predicted_price': '{:20,.2f}'.format(predicted_price),
+            'upper_bound': '{:20,.2f}'.format(upper_bound)
+        }
     else:
-        print("ERROR 2")
-        print(route_data)
+        return_data['success'] = False
+        return_data['error_message'] = 'Could not find specified cities (E02)'
 
-    print("")
-
-    return_data['predicted_price'] = round(predicted_price, 2)
-    return_data['lower_bound'] = round(lower_bound, 2)
-    return_data['upper_bound'] = round(upper_bound, 2)
+    print('\n' + '\n'.join(output) + '\n')
 
     return return_data
-
-'''for data in raw_data:
-    print(data[0] + " to " + data[1] + "\n========================================")
-
-    for x in range(1, 12):
-        if x in data[2]:
-            print(list(months.keys())[x] + ": $" + str(round(data[2][x], 2)), end = '')
-
-            if x in data[3]:
-                print(" || Change to " + list(months.keys())[x + 1 if x < 11 else 0] + ": /" + str(round(data[3][x] * 100, 2)) + "%", end = '')
-
-            print("")
-
-    print("")'''
