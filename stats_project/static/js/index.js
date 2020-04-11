@@ -46,13 +46,16 @@ $(document).ready(function(){
 			 },
 			 'dataType': 'json',
 			 'success': function (data){
-				 $('#predicted-price').text("$" + data['predicted_price']['predicted_price']);
+				 console.log(data);
+				 
+				 $('#predicted-price').text("$" + data['predicted_price']);
+				 $('#lower-bound').text("$" + data['lower_bound']);
+				 $('#upper-bound').text("$" + data['upper_bound']);
 				 
 				$('#loading-box').css('display', 'none');
 				$('#results-box').css('display', 'flex');
 				 
 				console.log("SUCCESS");
-				console.log(data);
 			}
 		});
 		

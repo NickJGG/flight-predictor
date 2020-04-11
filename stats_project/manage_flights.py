@@ -12,7 +12,7 @@ session = requests.session()
 raw_data = []
 #overall_mean_variances = [0.106802865, 0.191468296, 0.065944493, 0.142714838, 0.203228599, 0.06416601, -0.114002747, 0.071088255, 0.198161485, 0.480192837, 0.198254541, -0.236386928]
 overall_mean_variances = [0.046935368, 0.349271934, 0.015730188, 0.104964831, 0.219331373, 0.066125376, -0.13580952, 0.040763284, 0.247060446, 0.298777508, 0.165885977, -0.293639191]
-
+overall_stdev_variances = [0.48164962, 0.626318344, 0.511550704, 0.454368646, 0.393383854, 0.42043275, 0.244046188, 0.580217736, 0.654213661, 0.712783114, 0.459309131, 0.263116568]
 
 months = {
         'Jan': 1,
@@ -36,7 +36,10 @@ class Airport():
     state = ''
 
 def sort_distance(e):
-    return e['distance']
+    if 'distance' in e:
+        return e['distance']
+
+    return 10000
 
 def get_airports_near(city, distance):
     url = "https://www.distance24.org/route.json?stops=" + city
@@ -52,7 +55,10 @@ def get_airports_near(city, distance):
     nearby_cities.sort(key = sort_distance) # Sorts by distance from given city
 
     for city in nearby_cities:
-        if city['distance'] < distance: # Only adds cities below the threshold
+        if 'distance' in city:
+            if city['distance'] < distance: # Only adds cities below the threshold
+                cities.append(city['city'])
+        else:
             cities.append(city['city'])
 
     return cities
@@ -150,11 +156,12 @@ def get_codes(city):
     return codes
 
 # Averages the prices and variances
-def get_means(data):
+def get_stats(data):
     mean_prices = {}
     mean_variances = {}
     prices_counts = {}
     variances_counts = {}
+    stdev_variances = {}
 
     for route in data:
         for i, price in route[-2].items():
@@ -173,8 +180,8 @@ def get_means(data):
                 mean_variances[i] = variance
                 variances_counts[i] = 1
 
-    for i, mean in mean_variances.items():
-        mean /= variances_counts[i]
+    for i, variance in mean_variances.items():
+        variance /= variances_counts[i]
 
     for i, price in mean_prices.items():
         price /= prices_counts[i]
@@ -183,7 +190,29 @@ def get_means(data):
         if x + 1 not in mean_variances:
             mean_variances[x + 1] = overall_mean_variances[x] # Substitutes the overall variance if not is found
 
-    return mean_prices, mean_variances
+    stdev_totals = {}
+    stdev_counts = {}
+
+    for route in data:
+        for i, variance in route[-1].items():
+            if i in stdev_totals:
+                stdev_totals[i] += math.pow(variance - mean_variances[i], 2)
+                stdev_counts[i] += 1
+            else:
+                stdev_totals[i] = math.pow(variance - mean_variances[i], 2)
+                stdev_counts[i] = 1
+
+    for i, stdev_total in stdev_totals.items():
+        if stdev_counts[i] > 1:
+            stdev_variances[i] = math.sqrt(stdev_total / (stdev_counts[i] - 1))
+        else:
+            print("STDEV COUNT: " + str(stdev_counts[i]))
+
+    for x in range(len(overall_stdev_variances)):
+        if x + 1 not in stdev_variances:
+            stdev_variances[x + 1] = overall_stdev_variances[x] # Substitutes the overall standard deviation if not is found
+
+    return mean_prices, mean_variances, stdev_variances
 
 def get_final_data(depart, arrival):
     cities1 = get_all_codes(get_airports_near(depart, 200))[:7] # Gets codes of nearby cities
@@ -203,7 +232,9 @@ def get_final_data(depart, arrival):
                 if result:
                     flight_data.append(result)
 
-    mean_prices, mean_variances = get_means(flight_data)
+    mean_prices, mean_variances, stdev_variances = get_stats(flight_data)
+
+    print("STDEVS: " + str(stdev_variances))
 
     today = datetime.today()
     month_index = datetime.today().month # An index of 3 means from March to April
@@ -216,14 +247,22 @@ def get_final_data(depart, arrival):
 
     print("PREDICTED VARIANCE: " + str(predicted_variance))
 
-    depart_code = get_codes(depart)[0]
-    arrival_code = get_codes(arrival)[0]
+    depart_codes = get_codes(depart)
+    arrival_codes = get_codes(arrival)
 
-    route_data = get_flight_data(depart_code, arrival_code) # Gets the user's requested flight data
+    print(arrival_codes)
 
-    if not route_data: # If nothing is found by using the codes, use the cities names instead
-        print("ERROR 1")
+    if depart_codes != [] and arrival_codes != []:
+        depart_code = get_codes(depart)[0]
+        arrival_code = get_codes(arrival)[0]
 
+        route_data = get_flight_data(depart_code, arrival_code) # Gets the user's requested flight data
+
+        if not route_data: # If nothing is found by using the codes, use the cities names instead
+            print("ERROR 1")
+
+            route_data = get_flight_data(depart, arrival)
+    else:
         route_data = get_flight_data(depart, arrival)
 
     if route_data:
@@ -253,6 +292,8 @@ def get_final_data(depart, arrival):
         print("days since: " + str(days_since_last))
 
         predicted_price = price_from * (1 + (days_since_last * predicted_variance) / 30) # Calculates the predicted price
+        lower_bound = price_from * (1 + (days_since_last * (predicted_variance - stdev_variances[month_index])) / 30)
+        upper_bound = price_from * (1 + (days_since_last * (predicted_variance + stdev_variances[month_index])) / 30)
 
         print("PREDICTED PRICE: " + str(predicted_price))
     else:
@@ -262,6 +303,8 @@ def get_final_data(depart, arrival):
     print("")
 
     return_data['predicted_price'] = round(predicted_price, 2)
+    return_data['lower_bound'] = round(lower_bound, 2)
+    return_data['upper_bound'] = round(upper_bound, 2)
 
     return return_data
 

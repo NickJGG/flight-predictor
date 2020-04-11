@@ -11,6 +11,5 @@ def flight_data(request, departure, arrival):
 
     #print(data)
 
-    return JsonResponse({'predicted_price': data})
-
+    return JsonResponse(data)
 # Functions

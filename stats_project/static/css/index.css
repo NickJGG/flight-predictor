@@ -100,11 +100,40 @@ body{
 #results-box{
 	width: 100%;
 	margin-top: 20px;
-	display: none;
+	display: flex;
+	flex-direction: column;
 	align-items: center;
 	justify-content: center;
+}
+#results-box > p{
+	font-size: 14px;
+	text-transform: uppercase;
+	color: #333;
+	font-weight: 500;
+	margin: 8px 0 10px 0;
+}
+#results-divider{
+	width: 75%;
+	height: 1px;
+	background: #333;
+}
+#prediction-box{
+	width: 100%;
+	display: flex;
+	align-items: center;
 }
 #predicted-price{
 	color: green;
 	font-weight: 500;
+	font-size: 20px;
+}
+.prediction-bound{
+	font-weight: 500;
+	font-size: 12px;
+}
+.prediction-divider{
+	margin: 0 8px;
+	flex: 1;
+	height: 3px;
+	background: #87bb87;
 }
