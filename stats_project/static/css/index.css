@@ -82,7 +82,6 @@ body{
 	box-sizing: border-box;
 	color: white;
 	font-size: 12px;
-	text-transform: uppercase;
 	z-index: 2;
 	display: none;
 }
@@ -163,7 +162,7 @@ body{
 }
 
 #results-box{
-	display: none;
+	display: flex;
 }
 #results-box > p{
 	font-size: 14px;
@@ -211,7 +210,7 @@ body{
 .weather-icon{
 	width: 30px;
 	height: 30px;
-	background: rgba(0, 0, 0, .1);
+	background: #6ec9e8;
 	border-radius: 100%;
 }
 #prediction-box{
