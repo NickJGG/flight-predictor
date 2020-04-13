@@ -1,1 +1,1 @@
-web: gunicorn /stats_project/wsgi.py
+web: gunicorn stats_project.wsgi
