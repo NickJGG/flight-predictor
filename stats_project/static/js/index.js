@@ -50,18 +50,11 @@ $(document).ready(function(){
 				$('#loading-box').css('display', 'none');
 				
 				console.log(data);
-				console.log(data['success']);
 				 
 				if (data['success']){
-					$('#results-box').css('display', 'flex');
-					
-					$('#predicted-price').text("$" + data['confidence_interval']['predicted_price']);
-					$('#lower-bound').text("$" + data['confidence_interval']['lower_bound']);
-					$('#upper-bound').text("$" + data['confidence_interval']['upper_bound']);
+					showResults(data);
 				} else {
-					$('#error-box').css('display', 'flex');
-					
-					$('#error-message').text(data['error_message']);
+					showError(data);
 				}
 			}
 		});
@@ -69,3 +62,32 @@ $(document).ready(function(){
 		return false;
 	});
 });
+
+function showResults(data){
+	$('#results-box').css('display', 'flex');
+					
+	$('#predicted-price').text("$" + data['confidence_interval']['predicted_price']);
+	$('#lower-bound').text("$" + data['confidence_interval']['lower_bound']);
+	$('#upper-bound').text("$" + data['confidence_interval']['upper_bound']);
+	
+	var city_from = $('.weather-city').eq(0);
+	var city_to = $('.weather-city').eq(1);
+	
+	$(city_from).find('.city-name').text(data['cities'][0]);
+	$(city_to).find('.city-name').text(data['cities'][1]);
+	
+	$(city_from).find('.city-temp').text(data['weather']['from']['temp'] + '°');
+	$(city_to).find('.city-temp').text(data['weather']['to']['temp'] + '°');
+	
+	$(city_from).find('.city-main').text(data['weather']['from']['main']);
+	$(city_to).find('.city-main').text(data['weather']['to']['main']);
+	
+	$('#opinion').text(data['opinion']);
+	
+	$('#results-box').css('height', $('#form-container').outerHeight());
+}
+function showError(data){
+	$('#error-box').css('display', 'flex');
+					
+	$('#error-message').text(data['error_message']);
+}

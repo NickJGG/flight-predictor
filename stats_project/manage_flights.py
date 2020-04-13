@@ -15,10 +15,20 @@ from datetime import datetime, date
 
 session = requests.session()
 
+codes_url = "https://www.nationsonline.org/oneworld/IATA_Codes/airport_code_list.htm"
+codes_r = session.get(codes_url)
+codes_soup = BSoup(codes_r.content, 'html5lib')
+
 raw_data = []
-#overall_mean_variances = [0.106802865, 0.191468296, 0.065944493, 0.142714838, 0.203228599, 0.06416601, -0.114002747, 0.071088255, 0.198161485, 0.480192837, 0.198254541, -0.236386928]
 overall_mean_variances = [0.046935368, 0.349271934, 0.015730188, 0.104964831, 0.219331373, 0.066125376, -0.13580952, 0.040763284, 0.247060446, 0.298777508, 0.165885977, -0.293639191]
 overall_stdev_variances = [0.48164962, 0.626318344, 0.511550704, 0.454368646, 0.393383854, 0.42043275, 0.244046188, 0.580217736, 0.654213661, 0.712783114, 0.459309131, 0.263116568]
+
+opinions = ['Wait, if possible', 'Strongly advised to wait', 'Looks good']
+
+opinions_options = {
+    'Thunderstorm': opinions[0],
+    'Tornado': opinions[1],
+}
 
 months = {
         'Jan': 1,
@@ -130,9 +140,23 @@ def get_flight_data(depart, arrival):
 
     return False
 
-codes_url = "https://www.nationsonline.org/oneworld/IATA_Codes/airport_code_list.htm"
-codes_r = session.get(codes_url)
-codes_soup = BSoup(codes_r.content, 'html5lib')
+def get_weather_data(city):
+    url = "http://api.openweathermap.org/data/2.5/weather?q=" + city + "&appid=0d0edf5fecdbdc3efe2e67eedf441aae"
+
+    r = session.get(url)
+
+    json = r.json()
+
+    if 'weather' in json:
+        return {
+            'main': json['weather'][0]['main'],
+            'temp': kelvin_to_fahrenheit(json['main']['temp'])
+        }
+
+    return False
+
+def kelvin_to_fahrenheit(kelvin):
+    return round(kelvin * 9 / 5 - 459.67)
 
 def get_all_codes(cities):
     total_codes = []
@@ -162,14 +186,14 @@ def get_codes(city):
     return codes
 
 # Averages the prices and variances
-def get_stats(data):
+def get_stats(surrounding_data, flight_data):
     mean_prices = {}
     mean_variances = {}
     prices_counts = {}
     variances_counts = {}
     stdev_variances = {}
 
-    for route in data:
+    for route in surrounding_data:
         for i, price in route[-2].items():
             if i in mean_prices:
                 mean_prices[i] += price
@@ -186,6 +210,14 @@ def get_stats(data):
                 mean_variances[i] = variance
                 variances_counts[i] = 1
 
+    for i, variance in flight_data[-1].items():
+        if i in mean_variances:
+            mean_variances[i] += variance
+            variances_counts[i] += 1
+        else:
+            mean_variances[i] = variance
+            variances_counts[i] = 1
+
     for i, variance in mean_variances.items():
         variance /= variances_counts[i]
 
@@ -199,7 +231,7 @@ def get_stats(data):
     stdev_totals = {}
     stdev_counts = {}
 
-    for route in data:
+    for route in surrounding_data:
         for i, variance in route[-1].items():
             if i in stdev_totals:
                 stdev_totals[i] += math.pow(variance - mean_variances[i], 2)
@@ -219,6 +251,19 @@ def get_stats(data):
             stdev_variances[x + 1] = overall_stdev_variances[x] # Substitutes the overall standard deviation if not is found
 
     return mean_prices, mean_variances, stdev_variances
+
+def determine_opinion(upswing, weather_from, weather_to):
+    # Highest level threats
+    if weather_from['main'] in opinions_options:
+        return opinions_options[weather_from['main']]
+
+    if weather_to['main'] in opinions_options:
+        return opinions_options[weather_to['main']]
+
+    if upswing:
+        return opinions[0]
+
+    return opinions[2]
 
 def get_final_data(depart, arrival, sample_size_cap):
     return_data = {}
@@ -263,7 +308,7 @@ def get_final_data(depart, arrival, sample_size_cap):
                         surrounding_flights_data.append(result)
 
         # Gets the mean price and variances of the flights of surrounding cities, and also the standard deviations of each months' variance
-        mean_prices, mean_variances, stdev_variances = get_stats(surrounding_flights_data)
+        mean_prices, mean_variances, stdev_variances = get_stats(surrounding_flights_data, route_data)
 
         today = date.today()
         month_index = date.today().month # An index of 3 means from March to April
@@ -316,6 +361,9 @@ def get_final_data(depart, arrival, sample_size_cap):
             lower_bound = bound1
             upper_bound = bound2
 
+        weather_from = get_weather_data(depart)
+        weather_to = get_weather_data(arrival)
+
         # Outputs to console
         output.append(depart + ": " + str(cities1))
         output.append(arrival + ': ' + str(cities2) + '\n')
@@ -331,14 +379,22 @@ def get_final_data(depart, arrival, sample_size_cap):
         output.append('\tStandard Deviation: ' + str(stdev))
         output.append('\tPrice: $' + str(predicted_price))
 
+        output.append('\n' + str(weather_from))
+        output.append(str(weather_to))
+
         # Formats return data
         return_data['success'] = True
-        return_data['months'] = (month_from, month_to)
+        return_data['cities'] = (depart, arrival)
         return_data['confidence_interval'] = {
-            'lower_bound': '{:20,.2f}'.format(lower_bound),
-            'predicted_price': '{:20,.2f}'.format(predicted_price),
-            'upper_bound': '{:20,.2f}'.format(upper_bound)
+            'lower_bound': '{:.2f}'.format(lower_bound if lower_bound > 0 else 0),
+            'predicted_price': '{:.2f}'.format(predicted_price),
+            'upper_bound': '{:.2f}'.format(upper_bound)
         }
+        return_data['weather'] = {
+            'from': weather_from,
+            'to': weather_to
+        }
+        return_data['opinion'] = determine_opinion(stdev < 0 and days_into_cycle > 25, weather_from, weather_to)
     else:
         return_data['success'] = False
         return_data['error_message'] = 'Could not find specified cities (E02)'

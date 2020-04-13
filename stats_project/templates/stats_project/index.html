@@ -28,20 +28,31 @@
 			<img src = "{% static 'img/loading.gif' %}">
 			<p>This may take up to a minute.</p>
 		</div>
-		<div id = "results-box">
-			<div id = "results-divider"></div>
-			<p id = "prediction-title">Predicted Price</p>
-			<div id = "prediction-box">
-				<p id = "lower-bound" class = "prediction-bound">$98.22</p>
-				<div class = "prediction-divider"></div>
-				<p id = "predicted-price">$150.43</p>
-				<div class = "prediction-divider"></div>
-				<p id = "upper-bound" class = "prediction-bound">$202.64</p>
-			</div>
-		</div>
 		<div id = "error-box">
 			<p id = "error-message"></p>
 		</div>
+	</div>
+	<div id = "results-box">
+		<div id = "weather-box">
+			<div class = "weather-city">
+				<p class = "city-name" id = "city-from">Detroit</p>
+				<p class = "city-temp">79°</p>
+				<p class = "city-main">Clear</p>
+			</div>
+			<div class = "weather-city">
+				<p class = "city-name" id = "city-to">Atlanta</p>
+				<p class = "city-temp">34°</p>
+				<p class = "city-main">Clear</p>
+			</div>
+		</div>
+		<div id = "prediction-box">
+			<p id = "lower-bound" class = "prediction-bound">$98.22</p>
+			<div class = "prediction-divider"></div>
+			<p id = "predicted-price">$150.43</p>
+			<div class = "prediction-divider"></div>
+			<p id = "upper-bound" class = "prediction-bound">$202.64</p>
+		</div>
+		Our opinion: <p id = "opinion">Looks ok</p>
 	</div>
 	
 	<script src = "{% static 'js/jquery.js' %}"></script>

@@ -13,13 +13,15 @@ body{
 	justify-content: center;
 }
 
-#form-container{
+#form-container, #results-box{
 	width: 500px;
 	background: white;
 	border: 1px solid #e1e1e1;
 	box-shadow: 1px 2px 8px #e1e1e1;
 	padding: 30px 20px;
 	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
 }
 #form-title{
 	width: 100%;
@@ -35,7 +37,7 @@ body{
 	font-size: 22px;
 	text-transform: uppercase;
 	font-weight: 500;
-	color: #444B54;
+	color: #333;
 	margin: 5px 0;
 }
 #form-info{
@@ -97,30 +99,11 @@ body{
 	font-size: 12px;
 	color: #444;
 }
-#results-box{
-	width: 100%;
-	margin-top: 20px;
-	display: none;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-}
-#results-box > p{
-	font-size: 14px;
-	text-transform: uppercase;
-	color: #333;
-	font-weight: 500;
-	margin: 8px 0 10px 0;
-}
-#results-divider{
-	width: 75%;
-	height: 1px;
-	background: #333;
-}
 #prediction-box{
 	width: 100%;
 	display: flex;
 	align-items: center;
+	margin-top: 15px;
 }
 #predicted-price{
 	color: green;
@@ -148,4 +131,46 @@ body{
 	font-weight: 500;
 	font-size: 12px;
 	color: #333;
+}
+
+#results-box{
+	display: true;
+}
+#results-box > p{
+	font-size: 14px;
+	text-transform: uppercase;
+	color: #333;
+	font-weight: 500;
+	margin: 8px 0 10px 0;
+}
+#results-title{
+	width: 100%;
+	display: flex;
+	align-items: baseline;
+	justify-content: center;
+	text-transform: uppercase;
+	font-size: 12px;
+	margin-bottom: 10px;
+}
+#weather-box{
+	display: flex;
+	justify-content: center;
+	color: #333;
+}
+.weather-city{
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	margin: 0 10px;
+}
+.weather-city:first-child{
+	align-items: flex-end;
+}
+.city-name{
+	font-size: 24px;
+	font-weight: 500;
+	text-transform: uppercase;
+}
+.city-temp{
+	font-size: 14px;
 }
