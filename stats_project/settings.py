@@ -25,7 +25,9 @@ SECRET_KEY = 'v!7=sb_bfex3w(oa9qlrzj7wfs1!n-)7_bz3qi1co7k&6y9ye1'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['flightpredictor.herokuapp.com',
+                 'localhost',
+                 ]
 
 
 # Application definition

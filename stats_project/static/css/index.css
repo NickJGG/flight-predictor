@@ -162,7 +162,7 @@ body{
 }
 
 #results-box{
-	display: flex;
+	display: none;
 }
 #results-box > p{
 	font-size: 14px;
