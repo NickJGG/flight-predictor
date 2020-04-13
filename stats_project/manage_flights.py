@@ -150,7 +150,8 @@ def get_weather_data(city):
     if 'weather' in json:
         return {
             'main': json['weather'][0]['main'],
-            'temp': kelvin_to_fahrenheit(json['main']['temp'])
+            'temp': kelvin_to_fahrenheit(json['main']['temp']),
+            'icon': json['weather'][0]['icon']
         }
 
     return False
@@ -265,7 +266,7 @@ def determine_opinion(upswing, weather_from, weather_to):
 
     return opinions[2]
 
-def get_final_data(depart, arrival, sample_size_cap):
+def get_final_data(depart, arrival, sample_size_cap, distance_cap):
     return_data = {}
 
     depart_codes = get_codes(depart)
@@ -295,8 +296,8 @@ def get_final_data(depart, arrival, sample_size_cap):
         surrounding_flights_data = []
 
         # Gets codes of nearby cities
-        cities1 = get_all_codes(get_airports_near(depart, 200))[:sample_size_cap]
-        cities2 = get_all_codes(get_airports_near(arrival, 200))[:sample_size_cap]
+        cities1 = get_all_codes(get_airports_near(depart, distance_cap))[:sample_size_cap]
+        cities2 = get_all_codes(get_airports_near(arrival, distance_cap))[:sample_size_cap]
 
         # Gathers all flight data for nearby cities
         for city1 in cities1:
@@ -394,10 +395,12 @@ def get_final_data(depart, arrival, sample_size_cap):
             'from': weather_from,
             'to': weather_to
         }
-        return_data['opinion'] = determine_opinion(stdev < 0 and days_into_cycle > 25, weather_from, weather_to)
+        return_data['opinion'] = determine_opinion(predicted_variance < 0 and days_into_cycle < 25, weather_from, weather_to)
     else:
         return_data['success'] = False
         return_data['error_message'] = 'Could not find specified cities (E02)'
+
+        return return_data
 
     print('\n' + '\n'.join(output) + '\n')
 

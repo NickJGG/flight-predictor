@@ -15,12 +15,42 @@
 		<form id = "form-info" method = "get" action = "#">
 			{% csrf_token %}
 			<div class = "form-input">
-				<p>Departure City</p>
+				<div class = "form-title">
+					<p>Departure City</p>
+				</div>
 				<input id = "departure" name = "departure" placeholder = "Detroit" type = "text">
 			</div>
 			<div class = "form-input">
-				<p>Arrival City</p>
+				<div class = "form-title">
+					<p>Arrival City</p>
+				</div>
 				<input id = "arrival" name = "arrival" placeholder = "Los Angeles" type = "text">
+			</div>
+			<div id = "advanced-box">
+				<div class = "form-input">
+					<div class = "form-title">
+						<p>Surrounding City Amount Cap</p>
+						<div style = "position: relative">
+							<img class = "info-icon" src = "{% static 'img/info.png' %}">
+							<div class = "tooltip">Our prediction takes into account the prices from surrounding areas. The higher the cap on the amount, the more data we will have. Though, this will increase compute time.</div>
+						</div>
+					</div>
+					<input id = "amount" name = "amount" placeholder = "7" type = "text">
+				</div>
+				<div class = "form-input">
+					<div class = "form-title">
+						<p>Surrounding City Distance Cap</p>
+						<div style = "position: relative">
+							<img class = "info-icon" src = "{% static 'img/info.png' %}">
+							<div class = "tooltip">Our prediction takes into account the prices from surrounding areas. The higher the cap on the distance, the more data we will have. Though, this will increase compute time.</div>
+						</div>
+					</div>
+					<input id = "distance" name = "distance" placeholder = "7" type = "text">
+				</div>
+			</div>
+			<div id = "advanced-bar">
+				<p>advanced settings</p>
+				<img id = "expand-arrow" src = "{% static 'img/expand.png' %}">
 			</div>
 			<button id = "submit" name = "submit" type = "submit">Calculate</button>
 		</form>
@@ -37,12 +67,18 @@
 			<div class = "weather-city">
 				<p class = "city-name" id = "city-from">Detroit</p>
 				<p class = "city-temp">79°</p>
-				<p class = "city-main">Clear</p>
+				<div class = "weather-info">
+					<p class = "city-main">Clear</p>
+					<img class = "weather-icon" style = "margin-left: 5px" src = "http://openweathermap.org/img/wn/10d@2x.png">
+				</div>
 			</div>
 			<div class = "weather-city">
 				<p class = "city-name" id = "city-to">Atlanta</p>
 				<p class = "city-temp">34°</p>
-				<p class = "city-main">Clear</p>
+				<div class = "weather-info">
+					<img class = "weather-icon" style = "margin-right: 5px" src = "http://openweathermap.org/img/wn/10d@2x.png">
+					<p class = "city-main">Clear</p>
+				</div>
 			</div>
 		</div>
 		<div id = "prediction-box">
@@ -52,7 +88,11 @@
 			<div class = "prediction-divider"></div>
 			<p id = "upper-bound" class = "prediction-bound">$202.64</p>
 		</div>
-		Our opinion: <p id = "opinion">Looks ok</p>
+		<div id = "opinion-box">
+			<p id = "our-opinion">
+				Our opinion: <p id = "opinion">Looks ok</p>
+			</p>
+		</div>
 	</div>
 	
 	<script src = "{% static 'js/jquery.js' %}"></script>

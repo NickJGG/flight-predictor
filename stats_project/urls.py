@@ -21,5 +21,5 @@ from . import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.index),
-    path('flightdata/<str:departure>+<str:arrival>/', views.flight_data, name = 'flight_data'),
+    path('flightdata/<str:departure>+<str:arrival>+<int:amount_cap>+<int:distance_cap>/', views.flight_data, name = 'flight_data'),
 ]

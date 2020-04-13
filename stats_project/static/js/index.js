@@ -1,3 +1,5 @@
+var showingAdvanced = false;
+
 $(document).ready(function(){
 	function getCookie(name) {
 		var cookieValue = null;
@@ -29,15 +31,25 @@ $(document).ready(function(){
 	
 	$('#submit').on('click', function(e){
 		var departure = $('#departure').val(),
-			arrival = $('#arrival').val();
+			arrival = $('#arrival').val(),
+			amountCap = 7,
+			distanceCap = 200;
 			
 		$('#loading-box').css('display', 'flex');
 		$('#results-box').css('display', 'none');
 		$('#error-box').css('display', 'none');
 		
+		if (showingAdvanced){
+			if ($('#amount').val())
+				amountCap = $('#amount').val();
+			
+			if ($('#distance').val())
+				distanceCap = $('#distance').val();
+		}
+		
 		$.ajax({
 			'type': "GET",
-			'url': location.protocol + "//" + location.host + "/flightdata/" + departure + "+" + arrival + "/",
+			'url': location.protocol + "//" + location.host + "/flightdata/" + departure + "+" + arrival + "+" + amountCap + "+" + distanceCap + "/",
 			'data': {
 				'departure': departure,
 				'arrival': arrival
@@ -51,16 +63,32 @@ $(document).ready(function(){
 				
 				console.log(data);
 				 
-				if (data['success']){
+				if (data['success'])
 					showResults(data);
-				} else {
+				else
 					showError(data);
-				}
 			}
 		});
 		
 		return false;
 	});
+	$('#advanced-bar p').on('click', function(){
+		showingAdvanced = !showingAdvanced;
+		
+		if (showingAdvanced){
+			$('#advanced-box').css('display', 'flex');
+			$('#expand-arrow').css('transform', 'rotate(180deg)');
+		} else {
+			$('#advanced-box').css('display', 'none');
+			$('#expand-arrow').css('transform', 'rotate(0)');
+		}
+	});
+	$('.info-icon').on({'mouseover': function(){
+		$(this).next().css('display', 'block');
+		console.log("HOVER");
+	}, 'mouseleave': function(){
+		$(this).next().css('display', 'none');
+	}});
 });
 
 function showResults(data){
@@ -81,6 +109,8 @@ function showResults(data){
 	
 	$(city_from).find('.city-main').text(data['weather']['from']['main']);
 	$(city_to).find('.city-main').text(data['weather']['to']['main']);
+	
+	$(city_from).find('.weather-icon').attr('src', 'http://openweathermap.org/img/wn/' + data['weather']['from']['icon'] + '.png');
 	
 	$('#opinion').text(data['opinion']);
 	

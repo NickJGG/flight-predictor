@@ -63,7 +63,30 @@ body{
 	display: flex;
 	flex-direction: column;
 }
-.form-input p{
+.form-title{
+	display: flex;
+	align-items: center;
+}
+.info-icon{
+	height: fit-content;
+	margin-left: 5px;
+}
+.tooltip{
+	width: 300px;
+	max-width: 300px;
+	position: absolute;
+	left: -50%;
+	top: 100%;
+	background: black;
+	padding: 10px;
+	box-sizing: border-box;
+	color: white;
+	font-size: 12px;
+	text-transform: uppercase;
+	z-index: 2;
+	display: none;
+}
+.form-title > p{
 	font-size: 12px;
 	color: #888;
 	font-weight: 500;
@@ -80,7 +103,7 @@ body{
 .form-input input:focus{
 	border-color: #bbb;
 }
-.form-input:not(:first-child){
+#form-info > .form-input:not(:first-child){
 	margin-top: 5px;
 }
 #loading-box{
@@ -99,26 +122,32 @@ body{
 	font-size: 12px;
 	color: #444;
 }
-#prediction-box{
+#advanced-box{
+	display: none;
+	margin-top: 4px;
+}
+#advanced-box .form-input:nth-child(2){
+	margin-left: 10px;
+}
+#advanced-bar{
 	width: 100%;
+	margin-top: 5px;
 	display: flex;
-	align-items: center;
-	margin-top: 15px;
-}
-#predicted-price{
-	color: green;
-	font-weight: 500;
-	font-size: 20px;
-}
-.prediction-bound{
-	font-weight: 500;
+	align-items: flex-end;
+	justify-content: flex-end;
+	opacity: .7;
 	font-size: 12px;
 }
-.prediction-divider{
-	margin: 0 8px;
-	flex: 1;
-	height: 3px;
-	background: #87bb87;
+#advanced-bar p{
+	cursor: pointer;
+	margin-right: 5px;
+}
+#advanced-bar p:hover{
+	text-decoration: underline;
+}
+#expand-arrow{
+	display: block;
+	height: fit-content;
 }
 #error-box{
 	width: 100%;
@@ -134,7 +163,7 @@ body{
 }
 
 #results-box{
-	display: true;
+	display: none;
 }
 #results-box > p{
 	font-size: 14px;
@@ -171,6 +200,52 @@ body{
 	font-weight: 500;
 	text-transform: uppercase;
 }
+.weather-info{
+	display: flex;
+	align-items: center;
+}
 .city-temp{
 	font-size: 14px;
+	margin-bottom: 6px;
+}
+.weather-icon{
+	width: 30px;
+	height: 30px;
+	background: rgba(0, 0, 0, .1);
+	border-radius: 100%;
+}
+#prediction-box{
+	width: 100%;
+	display: flex;
+	align-items: center;
+	margin-top: 15px;
+}
+#predicted-price{
+	color: green;
+	font-weight: 500;
+	font-size: 20px;
+}
+.prediction-bound{
+	font-weight: 500;
+	font-size: 12px;
+}
+.prediction-divider{
+	margin: 0 8px;
+	flex: 1;
+	height: 3px;
+	background: #87bb87;
+}
+#opinion-box{
+	display: flex;
+	color: #333;
+	font-size: 16px;
+	margin-top: 10px;
+}
+#our-opinion{
+	font-weight: 500;
+	text-transform: uppercase;
+}
+#opinion{
+	font-weight: normal;
+	margin-left: 5px;
 }
