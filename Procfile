@@ -1,1 +1,1 @@
-web: gunicorn /stats_project/gettingstarted.wsgi
+web: gunicorn /stats_project/wsgi.py
