@@ -17,7 +17,7 @@ body{
 	width: 500px;
 	background: white;
 	border: 1px solid #e1e1e1;
-	box-shadow: 1px 2px 8px #e1e1e1;
+	box-shadow: 1px 2px 8px 0 #e1e1e1;
 	padding: 30px 20px;
 	box-sizing: border-box;
 	display: flex;
@@ -163,6 +163,17 @@ body{
 
 #results-box{
 	display: none;
+	position: relative;
+	border-left: 0;
+}
+#results-box::before{
+	content: '';
+	position: absolute;
+	left: -12px;
+	top: 0;
+	height: 100%;
+	width: 10px;
+	background: white;
 }
 #results-box > p{
 	font-size: 14px;
