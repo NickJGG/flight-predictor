@@ -1,4 +1,4 @@
-# STAT-360-Project
+# flight-predictor
 
 A price prediction tool for flights.
 
